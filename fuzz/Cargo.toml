@@ -1,0 +1,27 @@
+[package]
+name = "deque-fuzz"
+version = "0.0.0"
+authors = ["Automatically generated"]
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1.1.7", default-features = false, features = ["derive", "derive_arbitrary"] }
+fastrand = "1.8.0"
+
+[dependencies.deque]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "deque"
+path = "fuzz_targets/deque.rs"
+test = false
+doc = false
