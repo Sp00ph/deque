@@ -647,6 +647,7 @@ impl<T, A: Allocator> Deque<T, A> {
         ptr::swap(self.ptr_at_idx(i), self.ptr_at_idx(j))
     }
 
+    #[inline]
     unsafe fn write_iter(&mut self, it: impl Iterator<Item = T>, idx: usize, written: &mut usize) {
         let ptr = unsafe { self.buf.as_ptr().add(idx) };
         it.enumerate().for_each(|(i, val)| {
@@ -657,7 +658,7 @@ impl<T, A: Allocator> Deque<T, A> {
 
     /// # Safety
     /// `self.len + len <= self.cap` must be true. returns the number of elements written.
-    #[inline(never)]
+    #[inline]
     unsafe fn write_iter_wrapping(&mut self, mut it: impl Iterator<Item = T>, len: usize) -> usize {
         struct Guard {
             len_ptr: *mut usize,
@@ -1153,17 +1154,20 @@ impl<T, A: Allocator, I: Iterator<Item = T>> SpecExtend<T, I> for Deque<T, A> {
     default fn spec_extend(&mut self, mut iter: I) {
         loop {
             let room = self.cap - self.len;
-            let written = unsafe { self.write_iter_wrapping(ByRefSized(&mut iter), room) };
-            if written == 0 {
-                break;
+            let written = unsafe { self.write_iter_wrapping(ByRefSized(&mut iter).take(room), room) };
+            match iter.next() {
+                Some(t) => {
+                    self.reserve(iter.size_hint().0.saturating_add(1));
+                    self.push_back(t)
+                },
+                None => return
             }
-
-            self.reserve(iter.size_hint().0.saturating_add(1));
         }
     }
 }
 
 impl<T, A: Allocator, I: Iterator<Item = T> + TrustedLen> SpecExtend<T, I> for Deque<T, A> {
+    #[inline]
     fn spec_extend(&mut self, iter: I) {
         let len = match iter.size_hint().1 {
             Some(a) => a,
