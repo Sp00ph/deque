@@ -310,7 +310,7 @@ fn fuzz(data: &[Op]) {
 
                 if i > v2.len() + 1 && !v2.is_empty() {
                     let i2 = i % v2.len();
-                    assert_eq!(d1.swap_remove_back(i2), v1.swap_remove_back(i2));
+                    assert_eq!(d2.swap_remove_back(i2), v2.swap_remove_back(i2));
                 }
             }
             &Op::SwapRemoveFront(i) => {
@@ -324,7 +324,7 @@ fn fuzz(data: &[Op]) {
 
                 if i > v2.len() + 1 && !v2.is_empty() {
                     let i2 = i % v2.len();
-                    assert_eq!(d1.swap_remove_front(i2), v1.swap_remove_front(i2));
+                    assert_eq!(d2.swap_remove_front(i2), v2.swap_remove_front(i2));
                 }
             }
             &Op::Truncate(i) => {

@@ -1152,16 +1152,10 @@ impl<T, A: Allocator> Extend<T> for Deque<T, A> {
 impl<T, A: Allocator, I: Iterator<Item = T>> SpecExtend<T, I> for Deque<T, A> {
     #[inline]
     default fn spec_extend(&mut self, mut iter: I) {
-        loop {
-            let room = self.cap - self.len;
-            let written = unsafe { self.write_iter_wrapping(ByRefSized(&mut iter).take(room), room) };
-            match iter.next() {
-                Some(t) => {
-                    self.reserve(iter.size_hint().0.saturating_add(1));
-                    self.push_back(t)
-                },
-                None => return
-            }
+        while let Some(val) = iter.next() {
+            self.push_back(val);
+            let room = self.head_room();
+            unsafe { self.write_iter_wrapping(ByRefSized(&mut iter).take(room), room) };
         }
     }
 }
